@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically logs stats for the Bureau of Isekai Affairs on RoyalRoad
+Requires=rr_sample.service
+
+[Timer]
+Unit=rr_sample.service
+OnCalendar=hourly
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

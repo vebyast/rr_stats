@@ -1,0 +1,11 @@
+[Unit]
+Description=Samples stats for The Bureau of Isekai Affairs on RoyalRoad
+Wants=rr_sample.timer
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rr_sample
+WorkingDirectory=%h/Documents/
+
+[Install]
+WantedBy=multi-user.target
