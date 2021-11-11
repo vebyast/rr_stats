@@ -5,7 +5,7 @@ Wants=rr_sample.timer
 [Service]
 Type=oneshot
 ExecStart=%h/.local/bin/rr_sample
-WorkingDirectory=%h/Documents/
+WorkingDirectory=%h/src/rr_stats_data/
 
 [Install]
 WantedBy=multi-user.target
