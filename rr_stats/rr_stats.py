@@ -43,7 +43,7 @@ def get_stats(url: str) -> Stat:
     )
 
 
-def db_init(db):
+def _db_init(db):
     cur = db.cursor()
     cur.execute(
         "CREATE TABLE IF NOT EXISTS stats ("
@@ -58,7 +58,7 @@ def db_init(db):
     )
 
 
-def db_insert_sample(db, sample):
+def _db_insert_sample(db, sample):
     cur = db.cursor()
     insert_params = {
         "total_views": sample.total_views,
@@ -77,12 +77,30 @@ def db_insert_sample(db, sample):
     )
 
 
+def read_db(path):
+    db = sqlite3.connect(path)
+    cur = db.cursor()
+    data = cur.execute(
+        "SELECT " + ", ".join(f.name for f in dataclasses.fields(Stat)) + " FROM stats"
+    )
+    for row in data:
+        yield Stat(
+            total_views=row[0],
+            average_views=row[1],
+            favorites=row[2],
+            follows=row[3],
+            ratings=row[4],
+            comments=row[5],
+            timestamp=datetime.datetime.fromtimestamp(row[6]),
+        )
+
+
 def main():
     db = sqlite3.connect("bia.sqlite")
-    db_init(db)
+    _db_init(db)
     sample = get_stats(
         "https://www.royalroad.com/fiction/48116/the-bureau-of-isekai-affairs"
     )
-    db_insert_sample(db, sample)
+    _db_insert_sample(db, sample)
     db.commit()
     db.close()
