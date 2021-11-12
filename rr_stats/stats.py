@@ -1,17 +1,11 @@
 import dataclasses
+from typing import Iterator
 import datetime
 import pytz
 import sqlite3
 import bs4
 import requests
-
-
-def _normalize(s: str) -> int:
-    return int(s.replace(",", ""))
-
-
-def _extract_stat(stats_content, n):
-    return _normalize(stats_content.select(f"li:nth-of-type({n})")[0].text)
+import xdg
 
 
 @dataclasses.dataclass
@@ -29,21 +23,7 @@ class Stat:
     )
 
 
-def get_stats(url: str) -> Stat:
-    page = requests.get(url).content
-    soup = bs4.BeautifulSoup(page, "html.parser")
-    stats_content = soup.select("div.stats-content > div:nth-of-type(2) > ul")[0]
-    return Stat(
-        total_views=_extract_stat(stats_content, 2),
-        average_views=_extract_stat(stats_content, 4),
-        followers=_extract_stat(stats_content, 6),
-        favorites=_extract_stat(stats_content, 8),
-        ratings=_extract_stat(stats_content, 10),
-        pages=_extract_stat(stats_content, 12),
-    )
-
-
-def _db_init(db):
+def _db_ensure_inited(db: sqlite3.Connection):
     cur = db.cursor()
     cur.execute(
         "CREATE TABLE IF NOT EXISTS stats ("
@@ -58,8 +38,13 @@ def _db_init(db):
     )
 
 
-def _db_insert_sample(db, sample):
-    cur = db.cursor()
+def connect() -> sqlite3.Connection:
+    db = sqlite3.connect(xdg.xdg_data_home() / "rr_stats" / "rr_stats.sqlite")
+    _db_ensure_inited(db)
+    return db
+
+
+def insert_sample(db: sqlite3.Connection, sample: Stat):
     # list instead of dict so iteration order is stable
     insert_params = [
         ("total_views", sample.total_views),
@@ -70,6 +55,7 @@ def _db_insert_sample(db, sample):
         ("pages", sample.pages),
         ("timestamp", sample.timestamp.timestamp()),
     ]
+    cur = db.cursor()
     cur.execute(
         "INSERT INTO stats ("
         # column names
@@ -83,8 +69,7 @@ def _db_insert_sample(db, sample):
     )
 
 
-def read_db(path):
-    db = sqlite3.connect(path)
+def read_samples(db: sqlite3.Connection) -> Iterator[Stat]:
     cur = db.cursor()
     data = cur.execute(
         "SELECT "
@@ -108,13 +93,3 @@ def read_db(path):
             timestamp=datetime.datetime.fromtimestamp(row[6]),
         )
 
-
-def main():
-    db = sqlite3.connect("bia.sqlite")
-    _db_init(db)
-    sample = get_stats(
-        "https://www.royalroad.com/fiction/48116/the-bureau-of-isekai-affairs"
-    )
-    _db_insert_sample(db, sample)
-    db.commit()
-    db.close()
