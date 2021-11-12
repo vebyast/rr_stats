@@ -18,7 +18,7 @@ headerline = "\t".join(
         '"Favorites"',
         '"Followers"',
         '"Ratings"',
-        '"Comments"',
+        '"Pages"',
     ]
 )
 
@@ -30,7 +30,7 @@ def format_line(d):
         d.favorites,
         d.followers,
         d.ratings,
-        d.comments,
+        d.pages,
     ]
     return "\t".join(str(s) for s in values)
 
@@ -66,8 +66,8 @@ lines = [
     f'plot $Data using "Timestamp":"Favorites" notitle with points pt "o";',
     'set title "Followers"',
     f'plot $Data using "Timestamp":"Followers" notitle with points pt "o";',
-    'set title "Comments"',
-    f'plot $Data using "Timestamp":"Comments" notitle with points pt "o";',
+    'set title "Pages"',
+    f'plot $Data using "Timestamp":"Pages" notitle with points pt "o";',
 ]
 
 g = subprocess.run(

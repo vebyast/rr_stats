@@ -21,7 +21,7 @@ class Stat:
     favorites: int
     followers: int
     ratings: int
-    comments: int
+    pages: int
     timestamp: datetime.datetime = dataclasses.field(
         default_factory=lambda: datetime.datetime.now(
             pytz.timezone("America/Los_Angeles")
@@ -39,7 +39,7 @@ def get_stats(url: str) -> Stat:
         followers=_extract_stat(stats_content, 6),
         favorites=_extract_stat(stats_content, 8),
         ratings=_extract_stat(stats_content, 10),
-        comments=_extract_stat(stats_content, 12),
+        pages=_extract_stat(stats_content, 12),
     )
 
 
@@ -49,10 +49,10 @@ def _db_init(db):
         "CREATE TABLE IF NOT EXISTS stats ("
         "total_views INT,"
         "average_views INT,"
-        "favorites INT,"
         "followers INT,"
+        "favorites INT,"
         "ratings INT,"
-        "comments INT,"
+        "pages INT,"
         "timestamp INT"
         ")"
     )
@@ -60,20 +60,26 @@ def _db_init(db):
 
 def _db_insert_sample(db, sample):
     cur = db.cursor()
-    insert_params = {
-        "total_views": sample.total_views,
-        "average_views": sample.average_views,
-        "favorites": sample.favorites,
-        "followers": sample.followers,
-        "ratings": sample.ratings,
-        "comments": sample.comments,
-        "timestamp": sample.timestamp.timestamp(),
-    }
+    # list instead of dict so iteration order is stable
+    insert_params = [
+        ("total_views", sample.total_views),
+        ("average_views", sample.average_views),
+        ("followers", sample.followers),
+        ("favorites", sample.favorites),
+        ("ratings", sample.ratings),
+        ("pages", sample.pages),
+        ("timestamp", sample.timestamp.timestamp()),
+    ]
     cur.execute(
-        "INSERT INTO stats VALUES ("
-        + ", ".join(f":{k}" for k in insert_params.keys())
+        "INSERT INTO stats ("
+        # column names
+        + ", ".join(k for k, v in insert_params)
+        +") VALUES ("
+        # parameter names
+        + ", ".join(f":{k}" for k, v in insert_params)
         + ")",
-        insert_params,
+        # map parameter names to values
+        dict(insert_params),
     )
 
 
@@ -81,7 +87,15 @@ def read_db(path):
     db = sqlite3.connect(path)
     cur = db.cursor()
     data = cur.execute(
-        "SELECT " + ", ".join(f.name for f in dataclasses.fields(Stat)) + " FROM stats"
+        "SELECT "
+        "  total_views, "
+        "  average_views, "
+        "  favorites, "
+        "  followers, "
+        "  ratings, "
+        "  pages, "
+        "  timestamp "
+        "FROM STATS"
     )
     for row in data:
         yield Stat(
@@ -90,7 +104,7 @@ def read_db(path):
             favorites=row[2],
             followers=row[3],
             ratings=row[4],
-            comments=row[5],
+            pages=row[5],
             timestamp=datetime.datetime.fromtimestamp(row[6]),
         )
 
