@@ -50,7 +50,7 @@ def _db_init(db):
         "total_views INT,"
         "average_views INT,"
         "favorites INT,"
-        "follows INT,"
+        "followers INT,"
         "ratings INT,"
         "comments INT,"
         "timestamp INT"
@@ -64,7 +64,7 @@ def _db_insert_sample(db, sample):
         "total_views": sample.total_views,
         "average_views": sample.average_views,
         "favorites": sample.favorites,
-        "follows": sample.follows,
+        "followers": sample.follows,
         "ratings": sample.ratings,
         "comments": sample.comments,
         "timestamp": sample.timestamp.timestamp(),
