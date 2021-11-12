@@ -1,5 +1,5 @@
 [Unit]
-Description=Periodically logs stats for the Bureau of Isekai Affairs on RoyalRoad
+Description=logs stats for a story on Royal Road
 Requires=rr_sample.service
 
 [Timer]
