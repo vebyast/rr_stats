@@ -45,7 +45,7 @@ lines = [
     *datalines,
     "EOD",
     # Configure terminal
-    f"set terminal dumb ansirgb size {termsize.columns} {termsize.lines / 5} enhanced",
+    f"set terminal dumb ansirgb size {termsize.columns} {(termsize.lines - 8) / 4} enhanced",
     # Configure X axis
     'set xlabel "Date"',
     "set xdata time",
