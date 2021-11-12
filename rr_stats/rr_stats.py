@@ -36,8 +36,8 @@ def get_stats(url: str) -> Stat:
     return Stat(
         total_views=_extract_stat(stats_content, 2),
         average_views=_extract_stat(stats_content, 4),
-        favorites=_extract_stat(stats_content, 6),
-        follows=_extract_stat(stats_content, 8),
+        follows=_extract_stat(stats_content, 6),
+        favorites=_extract_stat(stats_content, 8),
         ratings=_extract_stat(stats_content, 10),
         comments=_extract_stat(stats_content, 12),
     )
