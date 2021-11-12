@@ -45,8 +45,7 @@ lines = [
     *datalines,
     "EOD",
     # Configure terminal
-    f"set terminal dumb ansirgb size {termsize.columns} {termsize.lines / 6} enhanced",
-    "set colorsequence classic",
+    f"set terminal dumb ansirgb size {termsize.columns} {termsize.lines / 5} enhanced",
     # Configure X axis
     'set xlabel "Date"',
     "set xdata time",
@@ -57,17 +56,20 @@ lines = [
     # Configure Y axis
     "set ytics out",
     'set lmargin "15"',
-    # Plots
-    'set title "{/:Bold Total Views}" enhanced',
-    f'plot $Data using "Timestamp":"Total Views" notitle with points pt "o";',
+    # Configure all plots
+    'set grid back linecolor "gray10"',
+    'set title textcolor "green"',
+    'set border back',
+    'set style line 1 linecolor "red" pointtype "o"',
+    # Make plots
+    'set title "Total Views"',
+    f'plot $Data using "Timestamp":"Total Views" notitle with points linestyle 1;',
     'set title "Average Views"',
-    f'plot $Data using "Timestamp":"Average Views" notitle with points pt "o";',
+    f'plot $Data using "Timestamp":"Average Views" notitle with points linestyle 1;',
     'set title "Favorites"',
-    f'plot $Data using "Timestamp":"Favorites" notitle with points pt "o";',
+    f'plot $Data using "Timestamp":"Favorites" notitle with points linestyle 1;',
     'set title "Followers"',
-    f'plot $Data using "Timestamp":"Followers" notitle with points pt "o";',
-    'set title "Pages"',
-    f'plot $Data using "Timestamp":"Pages" notitle with points pt "o";',
+    f'plot $Data using "Timestamp":"Followers" notitle with points linestyle 1;',
 ]
 
 g = subprocess.run(
