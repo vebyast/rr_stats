@@ -19,7 +19,7 @@ class Stat:
     total_views: int
     average_views: int
     favorites: int
-    follows: int
+    followers: int
     ratings: int
     comments: int
     timestamp: datetime.datetime = dataclasses.field(
@@ -36,7 +36,7 @@ def get_stats(url: str) -> Stat:
     return Stat(
         total_views=_extract_stat(stats_content, 2),
         average_views=_extract_stat(stats_content, 4),
-        follows=_extract_stat(stats_content, 6),
+        followers=_extract_stat(stats_content, 6),
         favorites=_extract_stat(stats_content, 8),
         ratings=_extract_stat(stats_content, 10),
         comments=_extract_stat(stats_content, 12),
@@ -64,7 +64,7 @@ def _db_insert_sample(db, sample):
         "total_views": sample.total_views,
         "average_views": sample.average_views,
         "favorites": sample.favorites,
-        "followers": sample.follows,
+        "followers": sample.followers,
         "ratings": sample.ratings,
         "comments": sample.comments,
         "timestamp": sample.timestamp.timestamp(),
@@ -88,7 +88,7 @@ def read_db(path):
             total_views=row[0],
             average_views=row[1],
             favorites=row[2],
-            follows=row[3],
+            followers=row[3],
             ratings=row[4],
             comments=row[5],
             timestamp=datetime.datetime.fromtimestamp(row[6]),
