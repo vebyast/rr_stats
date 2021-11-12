@@ -4,7 +4,7 @@ Requires=rr_sample.service
 
 [Timer]
 Unit=rr_sample.service
-OnCalendar=hourly
+OnCalendar=*-*-* *:00/15:00
 RandomizedDelaySec=10min
 
 [Install]
