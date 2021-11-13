@@ -4,7 +4,7 @@ Wants=rr_sample.timer
 
 [Service]
 Type=oneshot
-ExecStart=rr_stats_sample
+ExecStart=/absolute/path/to/rr_stats_sample "https://www.royalroad.com/REPLACE_ME"
 
 [Install]
 WantedBy=multi-user.target
