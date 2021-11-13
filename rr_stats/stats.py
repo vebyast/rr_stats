@@ -10,12 +10,12 @@ import xdg
 
 @dataclasses.dataclass
 class Stat:
-    total_views: int
-    average_views: int
-    favorites: int
-    followers: int
-    ratings: int
-    pages: int
+    total_views: int = 0
+    average_views: int = 0
+    favorites: int = 0
+    followers: int = 0
+    ratings: int = 0
+    pages: int = 0
     timestamp: datetime.datetime = dataclasses.field(
         default_factory=lambda: datetime.datetime.now(
             pytz.timezone("America/Los_Angeles")
@@ -59,11 +59,9 @@ def insert_sample(db: sqlite3.Connection, sample: Stat):
     cur.execute(
         "INSERT INTO stats ("
         # column names
-        + ", ".join(k for k, v in insert_params)
-        +") VALUES ("
+        + ", ".join(k for k, v in insert_params) + ") VALUES ("
         # parameter names
-        + ", ".join(f":{k}" for k, v in insert_params)
-        + ")",
+        + ", ".join(f":{k}" for k, v in insert_params) + ")",
         # map parameter names to values
         dict(insert_params),
     )
@@ -92,4 +90,3 @@ def read_samples(db: sqlite3.Connection) -> Iterator[Stat]:
             pages=row[5],
             timestamp=datetime.datetime.fromtimestamp(row[6]),
         )
-

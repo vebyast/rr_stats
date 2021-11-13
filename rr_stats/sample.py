@@ -27,7 +27,9 @@ def _extract_stats(page: bs4.BeautifulSoup) -> stats.Stat:
         pages=_extract_value(stats_content, 12),
     )
 
+
 _URL = "https://www.royalroad.com/fiction/48116/the-bureau-of-isekai-affairs"
+
 
 def main():
     page = requests.get(_URL).content
