@@ -11,7 +11,6 @@ import tempfile
 import itertools
 import more_itertools
 import math
-import xdg
 
 _HEADERLINE = "\t".join(
     [
@@ -83,8 +82,12 @@ def _make_gnuplot_program(
 def main():
     # Get necessary information and set things up
     colorama.init()
+    print(colorama.ansi.clear_screen())
     termsize = shutil.get_terminal_size((80, 20))
-    data = sorted(list(stats.read_samples(stats.connect())), key=lambda d: d.timestamp)
+    data = sorted(
+        list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY))),
+        key=lambda d: d.timestamp,
+    )
     current = data[-1]
     last_day = next(
         (
@@ -117,8 +120,13 @@ def main():
 
     # Display graphs of major stats
     gnuplot_program = _make_gnuplot_program(data, termsize)
-    subprocess.run(
+    plot = subprocess.run(
         ["gnuplot"],
         input="\n".join(gnuplot_program).encode("utf-8"),
         check=True,
     )
+
+
+def watch():
+    main()
+    stats.watch_db(main)

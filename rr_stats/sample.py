@@ -5,6 +5,7 @@ import sqlite3
 import bs4
 import requests
 from rr_stats import stats
+import sys
 
 
 def _normalize(s: str) -> int:
@@ -28,11 +29,9 @@ def _extract_stats(page: bs4.BeautifulSoup) -> stats.Stat:
     )
 
 
-_URL = "https://www.royalroad.com/fiction/48116/the-bureau-of-isekai-affairs"
-
-
 def main():
-    page = requests.get(_URL).content
+    page_url = sys.argv[1]
+    page = requests.get(page_url).content
     sample = _extract_stats(page)
     db = stats.connect()
     stats.insert_sample(db, sample)

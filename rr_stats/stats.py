@@ -1,11 +1,19 @@
+from watchdog import observers
+from watchdog import events
 import dataclasses
-from typing import Iterator
+from typing import Iterator, Callable
 import datetime
 import pytz
 import sqlite3
 import bs4
 import requests
 import xdg
+import time
+import enum
+
+
+def _db_path() -> str:
+    return xdg.xdg_data_home() / "rr_stats" / "rr_stats.sqlite"
 
 
 @dataclasses.dataclass
@@ -23,8 +31,7 @@ class Stat:
     )
 
 
-def _db_ensure_inited(db: sqlite3.Connection):
-    cur = db.cursor()
+def _db_ensure_inited(cur: sqlite3.Cursor):
     cur.execute(
         "CREATE TABLE IF NOT EXISTS stats ("
         "total_views INT,"
@@ -38,9 +45,18 @@ def _db_ensure_inited(db: sqlite3.Connection):
     )
 
 
-def connect() -> sqlite3.Connection:
-    db = sqlite3.connect(xdg.xdg_data_home() / "rr_stats" / "rr_stats.sqlite")
-    _db_ensure_inited(db)
+class OpenMode(enum.Enum):
+    READ_WRITE = enum.auto()
+    READ_ONLY = enum.auto()
+
+
+def connect(mode: OpenMode = OpenMode.READ_WRITE) -> sqlite3.Connection:
+    if mode == OpenMode.READ_ONLY:
+        to_uri = lambda p: "file:" + str(p) + "?mode=ro"
+    elif mode == OpenMode.READ_WRITE:
+        to_uri = lambda p: str(p)
+
+    db = sqlite3.connect(to_uri(_db_path()), uri=True)
     return db
 
 
@@ -56,6 +72,7 @@ def insert_sample(db: sqlite3.Connection, sample: Stat):
         ("timestamp", sample.timestamp.timestamp()),
     ]
     cur = db.cursor()
+    _db_ensure_inited(cur)
     cur.execute(
         "INSERT INTO stats ("
         # column names
@@ -90,3 +107,24 @@ def read_samples(db: sqlite3.Connection) -> Iterator[Stat]:
             pages=row[5],
             timestamp=datetime.datetime.fromtimestamp(row[6]),
         )
+
+
+class _CallbackEventHandler(events.FileSystemEventHandler):
+    def __init__(self, cb: Callable[[], None]):
+        self.callback = cb
+
+    def on_modified(self, event: events.FileSystemEvent):
+        self.callback()
+
+
+def watch_db(callback: Callable[[], None]):
+    event_handler = _CallbackEventHandler(callback)
+    observer = observers.Observer()
+    observer.schedule(event_handler, _db_path())
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    finally:
+        observer.stop()
+        observer.join()
