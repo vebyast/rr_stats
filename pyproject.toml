@@ -3,6 +3,7 @@ name = "rr_stats"
 version = "0.3.0"
 description = ""
 authors = ["Vebyast <vebyast@gmail.com>"]
+include = ["data/*"]
 
 [tool.poetry.dependencies]
 python = "3.8.10"

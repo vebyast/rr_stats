@@ -1,3 +1,4 @@
+import pkg_resources
 import datetime
 from typing import Iterable, List
 import colorama
@@ -96,11 +97,11 @@ def main():
     )
 
     # Display the current total view count in big letters using figlet
-    font = "standard"
+    font = pkg_resources.resource_filename("rr_stats", "data/bigmono12.tlf")
     left = figletize.figletize(
         str(current.total_views),
         font=font,
-        spacing=figletize.Spacing.KERN,
+        spacing=figletize.Spacing.FULLWIDTH,
     )
     left_width = max(len(l) for l in left.splitlines())
     right = figletize.figletize(
@@ -108,7 +109,7 @@ def main():
         font=font,
         justification=figletize.Justification.RIGHT,
         width=termsize.columns - left_width,
-        spacing=figletize.Spacing.KERN,
+        spacing=figletize.Spacing.FULLWIDTH,
     )
     print(colorama.Fore.GREEN)
     print(figletize.concat(left, right))
