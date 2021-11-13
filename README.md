@@ -7,6 +7,8 @@ author premium (reader retention, lists of followers), this tool will
 periodically scrape your fiction's front-page, extract the public
 stats, and store them so you can graph them.
 
+![Screenshot of the tool showing graphs](screenshot.png)
+
 # Installation
 
 Dependencies: [figlet](http://www.figlet.org/),
