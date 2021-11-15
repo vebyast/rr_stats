@@ -78,26 +78,18 @@ def _make_gnuplot_program(
         f'plot $Data using "Timestamp":"Followers" notitle with points linestyle 1;',
     ]
 
+_ONE_DAY = datetime.timedelta(days=1)
+
 
 def main():
     # Get necessary information and set things up
     colorama.init()
     print(colorama.ansi.clear_screen())
     termsize = shutil.get_terminal_size((80, 20))
-    data = sorted(
-        list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY))),
-        key=lambda d: d.timestamp,
-    )
-    current = data[-1]
-    last_day = next(
-        (
-            d
-            for d in data
-            if current.timestamp - d.timestamp > datetime.timedelta(days=1)
-        ),
-        # default
-        stats.Stat(),
-    )
+    data = list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY)))
+    current = max(data, key=lambda d: d.timestamp)
+    in_last_day = [d for d in data if current.timestamp - d.timestamp < _ONE_DAY]
+    last_day = min(in_last_day, key=lambda d: d.timestamp)
 
     # Display the current total view count in big letters using figlet
     font = pkg_resources.resource_filename("rr_stats", "data/bigmono12.tlf")
