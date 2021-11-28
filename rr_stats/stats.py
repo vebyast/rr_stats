@@ -1,5 +1,3 @@
-from watchdog import observers
-from watchdog import events
 import dataclasses
 from typing import Iterator, Callable
 import datetime
@@ -117,14 +115,5 @@ class _CallbackEventHandler(events.FileSystemEventHandler):
         self.callback()
 
 
-def watch_db(callback: Callable[[], None]):
-    event_handler = _CallbackEventHandler(callback)
-    observer = observers.Observer()
-    observer.schedule(event_handler, _db_path())
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    finally:
-        observer.stop()
-        observer.join()
+def print_db_path():
+    print(_db_path())

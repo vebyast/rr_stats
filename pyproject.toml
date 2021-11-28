@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rr_stats"
-version = "0.3.1"
+version = "0.3.2"
 description = ""
 authors = ["Vebyast <vebyast@gmail.com>"]
 include = ["data/*"]
@@ -13,7 +13,6 @@ pytz = "^2021.3"
 more-itertools = "^8.11.0"
 xdg = "^5.1.1"
 colorama = "^0.4.4"
-watchdog = "^2.1.6"
 
 [tool.poetry.dev-dependencies]
 black = "^21.10b0"
@@ -26,4 +25,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 rr_stats_sample = 'rr_stats.sample:main'
 rr_stats_graph = 'rr_stats.graph:main'
-rr_stats_watch = 'rr_stats.graph:watch'
+rr_stats_path = 'rr_stats.stats:print_db_path'
