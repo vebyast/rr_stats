@@ -78,7 +78,39 @@ def _make_gnuplot_program(
         f'plot $Data using "Timestamp":"Followers" notitle with points linestyle 1;',
     ]
 
+
 _ONE_DAY = datetime.timedelta(days=1)
+
+
+def big_display(x, previous):
+    # Display the current total view count in big letters using figlet
+    termsize = shutil.get_terminal_size((80, 20))
+    font = pkg_resources.resource_filename("rr_stats", "data/bigmono12.tlf")
+    left = figletize.figletize(
+        str(x),
+        font=font,
+        spacing=figletize.Spacing.FULLWIDTH,
+    )
+    left_width = max(len(l) for l in left.splitlines())
+    right = figletize.figletize(
+        f"(+{x - previous})",
+        font=font,
+        justification=figletize.Justification.RIGHT,
+        width=termsize.columns - left_width,
+        spacing=figletize.Spacing.FULLWIDTH,
+    )
+    print(
+        colorama.Style.BRIGHT
+        + colorama.Fore.GREEN
+        + figletize.concat(left, right)
+        + colorama.Style.RESET_ALL
+    )
+
+
+def small_display(field, x, previous):
+    termsize = shutil.get_terminal_size((80, 20))
+    line = f"{field}: {x} (+{x - previous})"
+    print(colorama.Style.BRIGHT + colorama.Fore.GREEN + line + colorama.Style.RESET_ALL)
 
 
 def main():
@@ -87,28 +119,15 @@ def main():
     print(colorama.ansi.clear_screen())
     termsize = shutil.get_terminal_size((80, 20))
     data = list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY)))
+
     current = max(data, key=lambda d: d.timestamp)
     in_last_day = [d for d in data if current.timestamp - d.timestamp < _ONE_DAY]
     last_day = min(in_last_day, key=lambda d: d.timestamp)
 
-    # Display the current total view count in big letters using figlet
-    font = pkg_resources.resource_filename("rr_stats", "data/bigmono12.tlf")
-    left = figletize.figletize(
-        str(current.total_views),
-        font=font,
-        spacing=figletize.Spacing.FULLWIDTH,
-    )
-    left_width = max(len(l) for l in left.splitlines())
-    right = figletize.figletize(
-        f"(+{current.total_views - last_day.total_views})",
-        font=font,
-        justification=figletize.Justification.RIGHT,
-        width=termsize.columns - left_width,
-        spacing=figletize.Spacing.FULLWIDTH,
-    )
-    print(colorama.Fore.GREEN)
-    print(figletize.concat(left, right))
-    print(colorama.Style.RESET_ALL)
+    big_display(current.total_views, last_day.total_views)
+    small_display("Average Views", current.average_views, last_day.average_views)
+    small_display("Favorites", current.favorites, last_day.favorites)
+    small_display("Followers", current.followers, last_day.followers)
 
     # Display graphs of major stats
     gnuplot_program = _make_gnuplot_program(data, termsize)
