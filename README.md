@@ -59,11 +59,11 @@ Easier but less debuggable and doesn't tolerate downtime as well:
 crontab -l | { cat ; echo '0 * * * * rr_stats_sample YOUR_FIC_URL_HERE'} | crontab -
 ```
 
-# Usage
+# Viewing your data
 
-Run `rr_stats_graph` to view your stats. Run `rr_stats_watch` to view
-your stats and refresh the graphs and numbers whenever your background
-job goes out and gets new stats.
+Run `rr_stats_graph` to view your stats. Run `rr_stats_path | entr -c
+rr_stats_graph` to view your stats and refresh the graphs and numbers
+whenever you get new stats or press space.
 
 Probably best used on a portrait-mode display or at least on a tall,
 thin window on a very large screen.
@@ -71,5 +71,6 @@ thin window on a very large screen.
 # Details
 
 Stores data in a sqlite3 database at
-`$XDG_DATA_HOME/rr_stats/rr_stats.sqlite`. Can only track a single fic
-right now; feel free to send me a PR adding multi-fic support.
+`$XDG_DATA_HOME/rr_stats/rr_stats.sqlite`, which you can get using
+`rr_stats_path`. Can only track a single fic right now; feel free to
+send me a PR adding multi-fic support.
