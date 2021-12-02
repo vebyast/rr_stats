@@ -107,13 +107,5 @@ def read_samples(db: sqlite3.Connection) -> Iterator[Stat]:
         )
 
 
-class _CallbackEventHandler(events.FileSystemEventHandler):
-    def __init__(self, cb: Callable[[], None]):
-        self.callback = cb
-
-    def on_modified(self, event: events.FileSystemEvent):
-        self.callback()
-
-
 def print_db_path():
     print(_db_path())
