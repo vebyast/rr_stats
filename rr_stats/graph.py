@@ -1,6 +1,6 @@
 import pkg_resources
 import datetime
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, TypeVar, Generator, Callable
 import colorama
 from rr_stats import stats
 from rr_stats import figletize
@@ -87,10 +87,22 @@ def _make_gnuplot_program(
 
 _ONE_DAY = datetime.timedelta(days=1)
 
+T = TypeVar('T')
+def _index_of(sequence: List[T], pred: Callable[[T], bool], start_idx: int = 0) -> int:
+    sliced = sequence[start_idx:]
+    for idx, element in enumerate(sliced):
+        if pred(element):
+            return idx + start_idx
+    raise RuntimeError("Didn't find an element satsifying the predicate")
 
-def _previous_day(data: Iterable[stats.Stat], d: stats.Stat) -> stats.Stat:
-    in_last_day = (lag for lag in data if d.timestamp - lag.timestamp < _ONE_DAY)
-    return min(in_last_day, key=lambda lag: lag.timestamp)
+
+def _data_with_lag(data: List[stats.Stat]) -> Generator[Tuple[stats.Stat, stats.Stat], None, None]:
+    data = sorted(data, key=lambda d: d.timestamp)
+    lag_idx = 0
+    for d_idx, d in enumerate(data):
+        pred = lambda lag: d.timestamp - lag.timestamp < _ONE_DAY
+        lag_idx = _index_of(data, pred, start_idx=lag_idx)
+        yield d, data[lag_idx]
 
 
 def big_display(x, previous):
@@ -129,9 +141,7 @@ def main():
     colorama.init()
     print(colorama.ansi.clear_screen())
     termsize = shutil.get_terminal_size((80, 20))
-    data = sorted(list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY))),
-                  key=lambda d: d.timestamp)
-    data_with_lag = list((d, _previous_day(data, d)) for d in data)
+    data_with_lag = list(_data_with_lag(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY))))
 
     current, last_day = max(data_with_lag, key=lambda d: d[0].timestamp)
 
