@@ -1,6 +1,6 @@
 import pkg_resources
 import datetime
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 import colorama
 from rr_stats import stats
 from rr_stats import figletize
@@ -16,22 +16,28 @@ _HEADERLINE = "\t".join(
     [
         '"Timestamp"',
         '"Total Views"',
+        '"Total Views/Day"',
         '"Average Views"',
         '"Favorites"',
+        '"Favorites/Day"',
         '"Followers"',
+        '"Followers/Day"',
         '"Ratings"',
         '"Pages"',
     ]
 )
 
 
-def _format_line(d: stats.Stat):
+def _format_line(d: stats.Stat, lag: stats.Stat):
     values = [
         d.timestamp.timestamp(),
         d.total_views,
+        d.total_views - lag.total_views,
         d.average_views,
         d.favorites,
+        d.favorites - lag.favorites,
         d.followers,
+        d.followers - lag.followers,
         d.ratings,
         d.pages,
     ]
@@ -39,16 +45,16 @@ def _format_line(d: stats.Stat):
 
 
 def _make_gnuplot_program(
-    data: Iterable[stats.Stat], termsize: os.terminal_size
+    data: Iterable[Tuple[stats.Stat, stats.Stat]], termsize: os.terminal_size
 ) -> List[str]:
-    xmin = math.floor(min(d.timestamp for d in data).timestamp())
-    xmax = math.ceil(max(d.timestamp for d in data).timestamp())
+    xmin = math.floor(min(d.timestamp for d, _ in data).timestamp())
+    xmax = math.ceil(max(d.timestamp for d, _ in data).timestamp())
 
     return [
         # Inline data
         "$Data << EOD",
         _HEADERLINE,
-        *[_format_line(d) for d in data],
+        *[_format_line(d, lag) for d, lag in data],
         "EOD",
         # Configure terminal
         f"set terminal dumb ansirgb size {termsize.columns} {(termsize.lines - 12) / 5} enhanced",
@@ -68,18 +74,23 @@ def _make_gnuplot_program(
         "set border back",
         'set style line 1 linecolor "red" pointtype "o"',
         # Make plots
-        'set title "Total Views"',
-        f'plot $Data using "Timestamp":"Total Views" notitle with points linestyle 1;',
+        'set title "Total Views/Day"',
+        f'plot $Data using "Timestamp":"Total Views/Day" notitle with points linestyle 1;',
         'set title "Average Views"',
         f'plot $Data using "Timestamp":"Average Views" notitle with points linestyle 1;',
-        'set title "Favorites"',
-        f'plot $Data using "Timestamp":"Favorites" notitle with points linestyle 1;',
-        'set title "Followers"',
-        f'plot $Data using "Timestamp":"Followers" notitle with points linestyle 1;',
+        'set title "Favorites/Day"',
+        f'plot $Data using "Timestamp":"Favorites/Day" notitle with points linestyle 1;',
+        'set title "Followers/Day"',
+        f'plot $Data using "Timestamp":"Followers/Day" notitle with points linestyle 1;',
     ]
 
 
 _ONE_DAY = datetime.timedelta(days=1)
+
+
+def _previous_day(data: Iterable[stats.Stat], d: stats.Stat) -> stats.Stat:
+    in_last_day = (lag for lag in data if d.timestamp - lag.timestamp < _ONE_DAY)
+    return min(in_last_day, key=lambda lag: lag.timestamp)
 
 
 def big_display(x, previous):
@@ -118,11 +129,11 @@ def main():
     colorama.init()
     print(colorama.ansi.clear_screen())
     termsize = shutil.get_terminal_size((80, 20))
-    data = list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY)))
+    data = sorted(list(stats.read_samples(stats.connect(stats.OpenMode.READ_ONLY))),
+                  key=lambda d: d.timestamp)
+    data_with_lag = list((d, _previous_day(data, d)) for d in data)
 
-    current = max(data, key=lambda d: d.timestamp)
-    in_last_day = [d for d in data if current.timestamp - d.timestamp < _ONE_DAY]
-    last_day = min(in_last_day, key=lambda d: d.timestamp)
+    current, last_day = max(data_with_lag, key=lambda d: d[0].timestamp)
 
     big_display(current.total_views, last_day.total_views)
     small_display("Average Views", current.average_views, last_day.average_views)
@@ -130,7 +141,7 @@ def main():
     small_display("Followers", current.followers, last_day.followers)
 
     # Display graphs of major stats
-    gnuplot_program = _make_gnuplot_program(data, termsize)
+    gnuplot_program = _make_gnuplot_program(data_with_lag, termsize)
     plot = subprocess.run(
         ["gnuplot"],
         input="\n".join(gnuplot_program).encode("utf-8"),
